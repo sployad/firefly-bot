@@ -1,0 +1,21 @@
+{
+  "name": "firefly-bot",
+  "version": "1.0.0",
+  "description": "Bot for different providers (such vk, telegram)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bot",
+    "telegram",
+    "vk",
+    "chatbot",
+    "chat"
+  ],
+  "author": " <sployad>",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.1.3"
+  }
+}
