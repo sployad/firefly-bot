@@ -16,6 +16,11 @@
   "author": " <sployad>",
   "license": "ISC",
   "devDependencies": {
+    "ts-node-dev": "^1.1.1",
     "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "@reactivex/rxjs": "^6.6.3",
+    "rxjs": "^6.6.3"
   }
 }
