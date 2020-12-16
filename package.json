@@ -21,7 +21,9 @@
   },
   "dependencies": {
     "@reactivex/rxjs": "^6.6.3",
+    "@types/moment": "^2.13.0",
     "axios": "^0.21.0",
+    "moment": "^2.29.1",
     "rxjs": "^6.6.3"
   }
 }

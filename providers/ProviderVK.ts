@@ -1,7 +1,8 @@
 import {Provider} from "./Provider";
-import {from, Observable, of, timer} from "rxjs";
 import axios from 'axios';
-import {map, switchMap} from 'rxjs/operators';
+import {VKMessage} from '../types';
+import {fromArray} from 'rxjs/internal/observable/fromArray';
+import {filter, map} from 'rxjs/operators';
 
 export class ProviderVK extends Provider {
     private groupId: number = 0;
@@ -12,7 +13,6 @@ export class ProviderVK extends Provider {
 
     async initLongPoolingServer() {
         const data = await axios.get(`${this.url}messages.getLongPollServer?group_id=${this.groupId}&lp_version=3&access_token=${this.token}&v=5.103`).then(res => res.data.response);
-        console.log('long pooling');
         this.server = data.server;
         this.key = data.key;
         this.ts = data.ts;
@@ -23,6 +23,7 @@ export class ProviderVK extends Provider {
             const res = await axios.get(`${this.url}groups.getById?&access_token=${this.token}&v=5.103`);
             if (res.data.response) {
                 this.groupId = res.data.response[0].id
+                console.log('this.groupId', this.groupId)
             } else {
                 throw res.data;
             }
@@ -31,26 +32,33 @@ export class ProviderVK extends Provider {
         }
     }
 
-    startPooling(interval: number = 25000) {
-        const wait = Math.round(interval / 1000);
-        return timer(0, interval).pipe(switchMap(_ => this.doRequest(wait)));
+    async startPooling() {
+        await this.initUser();
+        await this.initLongPoolingServer();
+        this.doRequest();
     }
 
-    doRequest(wait: number = 25) {
-        return from((axios.get(`https://${this.server}?act=a_check&key=${this.key}&ts=${this.ts}&wait=${wait}`)))
-            .pipe(
-                switchMap(_ => {
-                    console.log(_.data)
-                    this.ts = _.data.ts;
-                    return of(_.data.updates)
-                })
-            );
+    async doRequest(wait: number = 25) {
+        try {
+            const {
+                ts,
+                updates
+            } = await axios.get(`https://${this.server}?act=a_check&key=${this.key}&ts=${this.ts}&wait=${wait}`).then(res => res.data);
+            this.ts = ts;
+            fromArray(updates as [[number, number, number, number, string, string]]).pipe(
+                filter(((m: any) => m[0] == 4)),
+                map((m: []) => this.createMessage.apply(null, [...m.slice(1), m] as any))).subscribe((val) => {
+                this.newMessage$.next(val);
+            })
+            this.doRequest(wait)
+            return;
+        } catch (e) {
+            this.doRequest(wait);
+        }
     }
 
     async launch() {
-        await this.initUser();
-        await this.initLongPoolingServer();
-        this.newMessage = this.startPooling();
+        this.startPooling()
     }
 
 }
