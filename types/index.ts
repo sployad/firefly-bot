@@ -1,27 +1,19 @@
-export type VKMessage = {
-    ts: number,
-    flag: VKMessageFlag,
-    fromID: number,
-    date: number,
-    title: string,
+export type VKMessage = [number, number, number, number, number, string, string]
+export type SendMessage = {
+    peer_id: number,
+    random_id: number,
     message: string
 }
-
-export enum VKMessageFlag {
-    UNREAD = 1,
-    OUTBOX = 2,
-    REPLIED = 8,
-    CHAT = 16,
-    FRIENDS = 32,
-    SPAM = 64,
-    DELETED = 128,
-    FIXED = 256,
-    MEDIA = 512,
-    HIDDEN = 65536,
+export enum MessageType {
+    NEW_MESSAGE = 4,
+    EDITED_MESSAGE = 5,
 }
 
 export type TelegramMessage = {
+}
 
+type replyMessage = {
+    (message: string): void
 }
 
 export type Context = {
@@ -29,5 +21,6 @@ export type Context = {
     message: string,
     from: number,
     date: string,
+    reply: replyMessage,
     original: VKMessage | TelegramMessage
 }
