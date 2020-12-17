@@ -18,6 +18,14 @@ async function start() {
             ctx.reply('Привет!');
         }
     });
+    bot.on().subscribe(
+        {
+            next: (ctx: Context) => {
+                if (ctx.message == 'как дела?')
+                    ctx.reply('Нормально, твои как?')
+            }
+        }
+    )
     bot.addProvider(provider);
     bot.start();
 

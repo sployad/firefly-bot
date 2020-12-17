@@ -7,8 +7,8 @@ type callbackBot = {
 }
 
 type onBot = {
-    <T>(cb?: T): T extends Function ? Bot : Subject<Context>;
     <T>(type: string, cb?: T): T extends Function ? Bot : Subject<Context>;
+    <T>(cb?: T): T extends Function ? Bot : Subject<Context>;
 }
 
 type hearsBot = {
@@ -28,9 +28,27 @@ interface BotInterface {
 export class Bot implements BotInterface {
     on: onBot = (cbOrType?: (callbackBot | string), cb?: callbackBot): Bot | Subject<Context> => {
         if (typeof cbOrType == 'string') {
-            return new Subject<Context>()
+            if (!this.onList[cbOrType]) this.onList[cbOrType] = [];
+            if (cb) {
+                this.onList[cbOrType].push(cb);
+                return this;
+            } else {
+                const sub = new Subject<Context>();
+                this.onList[cbOrType].push(sub);
+                return sub;
+            }
         }
-        return this;
+        if (cbOrType) {
+            if (!this.onList['text']) this.onList['text'] = [];
+            this.onList['text'].push(cbOrType);
+            return this;
+        } else {
+            const sub = new Subject<Context>();
+            this.onList['text'].push(sub);
+            return sub;
+        }
+
+
     }
 
     addProvider(provider: Provider): Bot {
