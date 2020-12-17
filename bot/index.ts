@@ -6,8 +6,9 @@ type callbackBot = {
     (ctx: Context): void
 }
 
-type onBot<T> = {
-    (cb?: T): T extends callbackBot ? Bot : Subject<Context>;
+type onBot = {
+    <T>(cb?: T): T extends Function ? Bot : Subject<Context>;
+    <T>(type: string, cb?: T): T extends Function ? Bot : Subject<Context>;
 }
 
 type hearsBot = {
@@ -25,17 +26,12 @@ interface BotInterface {
 }
 
 export class Bot implements BotInterface {
-    on = (cb?: (callbackBot | string)) => {
-        if (!this.onList['text']) this.onList['text'] = []
-        if (typeof cb == 'string') {
-            const sub = new Subject<Context>();
-            this.onList['text'].push(sub);
-            return sub;
+    on: onBot = (cbOrType?: (callbackBot | string), cb?: callbackBot): Bot | Subject<Context> => {
+        if (typeof cbOrType == 'string') {
+            return new Subject<Context>()
         }
-        if (cb)
-            this.onList['text'].push(cb);
         return this;
-    };
+    }
 
     addProvider(provider: Provider): Bot {
         provider.newMessage$.subscribe({

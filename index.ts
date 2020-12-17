@@ -13,7 +13,7 @@ async function start() {
         .build()
 
     const bot = new Bot();
-    bot.on((ctx) => {
+    bot.on((ctx: Context) => {
         if (ctx.message == 'Привет') {
             ctx.reply('Привет!');
         }
