@@ -1,7 +1,9 @@
 import {ProvidersList} from "./providers/Provider";
 import {ProviderBuilder} from "./providers/ProviderBuilder";
-import {Observable} from 'rxjs';
+import {Observable, Subject} from 'rxjs';
 import {Context} from './types';
+import {Bot} from "./bot";
+import {map} from "rxjs/operators";
 
 
 async function start() {
@@ -10,12 +12,14 @@ async function start() {
         .setToken('')
         .build()
 
-    provider.newMessage$.subscribe({
-        next(ctx: Context) {
-            ctx.reply('И тебе привет');
+    const bot = new Bot();
+    bot.on((ctx) => {
+        if (ctx.message == 'Привет') {
+            ctx.reply('Привет!');
         }
-    })
-    await provider.launch()
+    });
+    bot.addProvider(provider);
+    bot.start();
 
 }
 

@@ -1,10 +1,74 @@
 import {Provider} from '../providers/Provider';
+import {Context} from "../types";
+import {Observable, Subject} from "rxjs";
 
-export class Bot {
-    private on: [] = [];
-    private hears: [] = [];
-    private command: [] = [];
-    private provider?: Provider;
+type callbackBot = {
+    (ctx: Context): void
+}
 
+type onBot<T> = {
+    (cb?: T): T extends callbackBot ? Bot : Subject<Context>;
+}
+
+type hearsBot = {
+    (regex: RegExp, cb: callbackBot): Bot
+}
+
+type commandBot = {
+    (command: string, cb: callbackBot): Bot
+}
+
+interface BotInterface {
+    onList: Record<string, (callbackBot | Subject<Context>)[]>,
+    providers: Provider[];
+    start: Function;
+}
+
+export class Bot implements BotInterface {
+    on = (cb?: (callbackBot | string)) => {
+        if (!this.onList['text']) this.onList['text'] = []
+        if (typeof cb == 'string') {
+            const sub = new Subject<Context>();
+            this.onList['text'].push(sub);
+            return sub;
+        }
+        if (cb)
+            this.onList['text'].push(cb);
+        return this;
+    };
+
+    addProvider(provider: Provider): Bot {
+        provider.newMessage$.subscribe({
+            next: this.messageHandler.bind(this)
+        });
+        this.providers.push(provider);
+        return this;
+    }
+
+    private messageHandler(ctx: Context) {
+        this.onList['text'].forEach((cb: callbackBot | Subject<Context>) => {
+            if (cb instanceof Subject) {
+                cb.next(ctx);
+            } else {
+                cb(ctx);
+            }
+        });
+    }
+
+    start(): void {
+        if (!this.providers.length) {
+            console.error('Provider list is empty');
+            return;
+        }
+        this.providers.forEach(p => p.launch());
+    }
+
+    // commandList: commandBot[];
+    // hears: hearsBot;
+    // hearsList: hearsBot[];
+    // on: onBot;
+    providers: Provider[] = [];
+    onList: Record<string, (callbackBot | Subject<Context>)[]> = {};
 
 }
+
