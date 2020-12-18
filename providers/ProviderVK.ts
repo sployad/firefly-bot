@@ -1,6 +1,6 @@
 import {Provider} from "./Provider";
 import axios from 'axios';
-import {Context, MessageType, SendMessage, VKMessage} from '../types';
+import {Context, MessageContentType, MessageEventType, SendMessage, VKMessage} from '../types';
 import {fromArray} from 'rxjs/internal/observable/fromArray';
 import {filter, map} from 'rxjs/operators';
 import moment = require("moment");
@@ -11,7 +11,7 @@ export class ProviderVK extends Provider {
     private key: string = '';
     private ts: string = '';
     private url: string = 'https://api.vk.com/method/';
-    private messagesTypes: Array<MessageType> = [MessageType.NEW_MESSAGE, MessageType.EDITED_MESSAGE];
+    private messagesTypes: Array<MessageEventType> = [MessageEventType.NEW_MESSAGE, MessageEventType.EDITED_MESSAGE];
 
     async initLongPoolingServer() {
         const data = await axios.get(`${this.url}messages.getLongPollServer?group_id=${this.groupId}&lp_version=3&access_token=${this.token}&v=5.103`).then(res => res.data.response);
@@ -45,9 +45,9 @@ export class ProviderVK extends Provider {
             const {
                 ts,
                 updates
-            } = await axios.get(`https://${this.server}?act=a_check&key=${this.key}&ts=${this.ts}&wait=${wait}`).then(res => res.data);
+            } = await axios.get(`https://${this.server}?act=a_check&key=${this.key}&ts=${this.ts}&wait=${wait}&mode=2`).then(res => res.data);
             this.ts = ts;
-            console.log(updates)
+            console.log(updates);
             fromArray(updates as VKMessage[]).pipe(
                 filter(((m: VKMessage) => this.messagesTypes.includes(m[0]) && m[2] != 3)),
                 map((m: VKMessage) => this.createMessage(m))).subscribe((val) => {
@@ -79,10 +79,12 @@ export class ProviderVK extends Provider {
             id = 1,
             from = 3,
             date = 4,
-            message = 6
+            message = 6,
+            attachment = 7
         }
 
         return {
+            type: original[VKMessageFields.attachment]?.attach1_type || MessageContentType.TEXT,
             id: original[VKMessageFields.id],
             from: original[VKMessageFields.from],
             date: moment.unix(original[VKMessageFields.date]).format('DD.MM.yyyy'),

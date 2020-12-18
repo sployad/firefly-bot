@@ -1,9 +1,7 @@
 import {ProvidersList} from "./providers/Provider";
 import {ProviderBuilder} from "./providers/ProviderBuilder";
-import {Observable, Subject} from 'rxjs';
-import {Context} from './types';
+import {Context, MessageContentType} from './types';
 import {Bot} from "./bot";
-import {map} from "rxjs/operators";
 
 
 async function start() {
@@ -18,14 +16,9 @@ async function start() {
             ctx.reply('Привет!');
         }
     });
-    bot.on().subscribe(
-        {
-            next: (ctx: Context) => {
-                if (ctx.message == 'как дела?')
-                    ctx.reply('Нормально, твои как?')
-            }
-        }
-    )
+    bot.on(MessageContentType.STICKER, (ctx: Context) => {
+        ctx.reply('Спасибо за стикер')
+    });
     bot.addProvider(provider);
     bot.start();
 

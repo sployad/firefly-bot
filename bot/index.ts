@@ -47,8 +47,6 @@ export class Bot implements BotInterface {
             this.onList['text'].push(sub);
             return sub;
         }
-
-
     }
 
     addProvider(provider: Provider): Bot {
@@ -60,12 +58,14 @@ export class Bot implements BotInterface {
     }
 
     private messageHandler(ctx: Context) {
-        this.onList['text'].forEach((cb: callbackBot | Subject<Context>) => {
-            if (cb instanceof Subject) {
-                cb.next(ctx);
-            } else {
-                cb(ctx);
-            }
+        Object.keys(this.onList).forEach(type => {
+            this.onList[type].forEach((cb: callbackBot | Subject<Context>) => {
+                if (cb instanceof Subject) {
+                    cb.next(ctx);
+                } else {
+                    cb(ctx);
+                }
+            })
         });
     }
 
