@@ -7,7 +7,7 @@ import {Bot} from "./bot";
 async function start() {
     const provider = new ProviderBuilder()
         .setProvider(ProvidersList.VK)
-        .setToken('6a223391a574954e2cfffc1b0f4145b529a982d19fb5b947479f19db3a35abc29b4806eba53976e1aedf5')
+        .setToken('')
         .build()
 
     const bot = new Bot();
@@ -20,6 +20,17 @@ async function start() {
         console.log(ctx.type)
         ctx.reply('Спасибо за стикер')
     });
+    bot.command('start').subscribe(
+        {
+            next: (ctx: Context) => {
+                ctx.reply('Давай начнем');
+            }
+        }
+    );
+    bot.hears(/\+?7\(?\d{3}\)?\d{7}/, (ctx: Context) => {
+        const phone = ctx.message.match(/\+?7\(?\d{3}\)?\d{7}/)!.values().next().value;
+        ctx.reply(`Хорошо, я позвоню тебе на ${phone}`)
+    })
     bot.addProvider(provider);
     bot.start();
 
