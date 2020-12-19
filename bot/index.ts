@@ -58,7 +58,9 @@ export class Bot implements BotInterface {
     }
 
     private messageHandler(ctx: Context) {
-        Object.keys(this.onList).forEach(type => {
+        Object.keys(this.onList)
+            .filter(type => type == ctx.type)
+            .forEach(type => {
             this.onList[type].forEach((cb: callbackBot | Subject<Context>) => {
                 if (cb instanceof Subject) {
                     cb.next(ctx);
