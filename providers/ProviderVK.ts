@@ -47,7 +47,6 @@ export class ProviderVK extends Provider {
                 updates
             } = await axios.get(`https://${this.server}?act=a_check&key=${this.key}&ts=${this.ts}&wait=${wait}&mode=2`).then(res => res.data);
             this.ts = ts;
-            console.log(updates);
             fromArray(updates as VKMessage[]).pipe(
                 filter(((m: VKMessage) => this.messagesTypes.includes(m[0]) && m[2] != 3)),
                 map((m: VKMessage) => this.createMessage(m))).subscribe((val) => {
@@ -82,7 +81,7 @@ export class ProviderVK extends Provider {
             message = 6,
             attachment = 7
         }
-
+        
         return {
             type: original[VKMessageFields.attachment]?.attach1_type || MessageContentType.TEXT,
             id: original[VKMessageFields.id],

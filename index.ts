@@ -5,8 +5,14 @@ import {Bot} from "./bot";
 
 
 async function start() {
-    const provider = new ProviderBuilder()
+
+    const providerVK = new ProviderBuilder()
         .setProvider(ProvidersList.VK)
+        .setToken('')
+        .build()
+
+    const providerTelegram = new ProviderBuilder()
+        .setProvider(ProvidersList.TELEGRAM)
         .setToken('')
         .build()
 
@@ -20,18 +26,15 @@ async function start() {
         console.log(ctx.type)
         ctx.reply('Спасибо за стикер')
     });
-    bot.command('start').subscribe(
-        {
-            next: (ctx: Context) => {
-                ctx.reply('Давай начнем');
-            }
-        }
-    );
+    bot.command('start', (ctx: Context) => {
+            ctx.reply('Давай начнем');
+        });
     bot.hears(/\+?7\(?\d{3}\)?\d{7}/, (ctx: Context) => {
         const phone = ctx.message.match(/\+?7\(?\d{3}\)?\d{7}/)!.values().next().value;
         ctx.reply(`Хорошо, я позвоню тебе на ${phone}`)
     })
-    bot.addProvider(provider);
+    bot.addProvider(providerVK);
+    bot.addProvider(providerTelegram);
     bot.start();
 
 }

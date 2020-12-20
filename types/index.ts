@@ -4,6 +4,30 @@ export type SendMessage = {
     random_id: number,
     message: string
 }
+export type TelegramMessage = {
+    message_id: number,
+    from: {
+        id: number,
+        is_bot: boolean,
+        first_name: string,
+        last_name: string,
+        username: string,
+        language_code: string
+    },
+    chat: {
+        id: number,
+        first_name: string,
+        last_name: string,
+        username: string,
+        type: string
+    }
+    date: number
+    text?: string
+    photo?: any,
+    video?: any,
+    audio?: any,
+    voice?: any
+}
 
 export enum MessageEventType {
     NEW_MESSAGE = 4,
@@ -19,8 +43,6 @@ export enum MessageContentType {
     DOCUMENT = 'doc',
 }
 
-export type TelegramMessage = {}
-
 type replyMessage = {
     (message: string): void
 }
@@ -29,9 +51,9 @@ type replyMessage = {
 export type Context = {
     type?: MessageContentType,
     id: number
-    message: string,
+    message: any,
     from: number,
     date: string,
     reply: replyMessage,
-    original: VKMessage | TelegramMessage
+    original: VKMessage | TelegramMessage,
 }
