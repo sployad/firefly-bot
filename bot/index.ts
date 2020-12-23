@@ -20,11 +20,13 @@ export class Bot {
         return this.addNewHandler(hearsKey, this.hearsList, cb);
     }
 
-    addProvider(provider: Provider): Bot {
-        provider.newMessage$.subscribe({
-            next: this.messageHandler.bind(this)
-        });
-        this.providers.push(provider);
+    addProvider(...providers: Provider[]): Bot {
+        providers.forEach(provider => {
+            provider.newMessage$.subscribe({
+                next: this.messageHandler.bind(this)
+            });
+            this.providers.push(provider);
+        })
         return this;
     }
 
