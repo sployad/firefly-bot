@@ -17,8 +17,28 @@ export type hearsHook = {
     <T>(regex: RegExp): T extends callbackBot ? Bot : Subject<Context>;
     <T>(regex: RegExp, cb?: T): T extends callbackBot ? Bot : Subject<Context>;
 };
+export type MiddlewareHandle = {
+    <T>(ctx: Context & T, next: MiddlewareNextFn): Promise<void>,
+};
+export type MiddlewareNextFn = {
+    (): Promise<void>
+}
 export type recordAction = {
     callbacks: callbackBot[] | null,
     subject: Subject<Context> | null
 };
 export type actionList = Record<string, recordAction>;
+
+export interface MiddlewareInterface {
+    next: MiddlewareInterface
+    handle: (ctx: Context & any) => Promise<void>;
+}
+
+export class UserMiddleware implements MiddlewareInterface {
+    next!: MiddlewareInterface;
+    userFn!: MiddlewareHandle;
+
+    async handle(ctx: Context & any) {
+        await this.userFn(ctx, () => this.next.handle(ctx));
+    };
+}

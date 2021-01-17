@@ -14,11 +14,9 @@ export class ProviderTelegram extends Provider {
     async doRequest(updatedId: number = 0) {
         try {
             const {ok, result} = await axios.get(`${this.url}${this.token}/getUpdates?limit=1&offset=${updatedId}`).then(res => res.data);
-            console.log(ok, result);
             if (result.length) {
                 let tgMessage = result[0].message as TelegramMessage;
                 updatedId = result[0].update_id + 1;
-                console.log(tgMessage);
                 this.newMessage$.next(this.createMessage(tgMessage));
             }
 

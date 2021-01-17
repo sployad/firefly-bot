@@ -1,29 +1,51 @@
 import {Provider} from '../providers/Provider';
 import {Context, MessageContentType} from "../types";
 import {Subject} from "rxjs";
-import {actionList, callbackBot, commandHook, hearsHook, onHook, recordAction} from './types';
+import {
+    actionList,
+    callbackBot,
+    commandHook,
+    hearsHook,
+    UserMiddleware,
+    MiddlewareInterface,
+    onHook,
+} from './types';
+import {MessageMiddleware} from './MessageMiddleware';
 
 export class Bot {
+
+    private readonly _middlewareMessage = new MessageMiddleware();
+
+    use(handle: any) {
+        const middleware = new UserMiddleware();
+        middleware.userFn = handle;
+        if (this.middlewares.length) {
+            this.middlewares[this.middlewares.length - 1].next = middleware;
+        }
+        this.middlewares.push(middleware)
+    }
+
     on: onHook = (cbOrType?: (callbackBot | MessageContentType), cb?: callbackBot): Bot | Subject<Context> => {
         if (typeof cbOrType == 'string') {
-            return this.addNewHandler(cbOrType, this.onList, cb);
+            return this.addNewHandler(cbOrType, this._middlewareMessage.onList, cb);
         }
-        return this.addNewHandler(MessageContentType.TEXT, this.onList, cbOrType);
+        return this.addNewHandler(MessageContentType.TEXT, this._middlewareMessage.onList, cbOrType);
     }
 
     command: commandHook = (command: string, cb?: callbackBot): Bot | Subject<Context> => {
-        return this.addNewHandler(command, this.commandList, cb);
+        return this.addNewHandler(command, this._middlewareMessage.commandList, cb);
     }
 
     hears: hearsHook = (regex: RegExp, cb?: callbackBot): Bot | Subject<Context> => {
         const hearsKey = regex.toString().slice(1, -1);
-        return this.addNewHandler(hearsKey, this.hearsList, cb);
+        return this.addNewHandler(hearsKey, this._middlewareMessage.hearsList, cb);
     }
 
     addProvider(...providers: Provider[]): Bot {
         providers.forEach(provider => {
+
             provider.newMessage$.subscribe({
-                next: this.messageHandler.bind(this)
+                next: (ctx) => this.middlewares[0].handle(ctx)
             });
             this.providers.push(provider);
         })
@@ -34,6 +56,11 @@ export class Bot {
         if (!this.providers.length) {
             console.error('Provider list is empty');
             return;
+        }
+        if (this.middlewares.length) {
+            this.middlewares[this.middlewares.length - 1].next = this._middlewareMessage;
+        } else {
+            this.middlewares.push(this._middlewareMessage);
         }
         this.providers.forEach(p => p.launch());
     }
@@ -50,47 +77,7 @@ export class Bot {
         }
     }
 
-    private provideToHandlers(item: recordAction, ctx: Context) {
-        if (item.callbacks != null) {
-            item.callbacks.forEach(cb => cb(ctx));
-        }
-        if (item.subject) item.subject.next(ctx);
-    }
-
-    private onHandler(ctx: Context) {
-        Object.keys(this.onList)
-            .filter(type => type == ctx.type)
-            .forEach(type => this.provideToHandlers(this.onList[type], ctx));
-    }
-
-    private commandHandler(ctx: Context) {
-        let command: string = ctx.message.match(/^\/\w+/i)!
-            .values()
-            .next()
-            .value
-            .slice(1);
-
-        Object.keys(this.commandList)
-            .filter((comm: string) => comm == command)
-            .forEach(comm => this.provideToHandlers(this.commandList[comm], ctx));
-    }
-
-    private messageHandler(ctx: Context) {
-        if (/^\/\w+/i.test(ctx.message)) {
-            this.commandHandler(ctx);
-            return;
-        }
-        const hears = Object.keys(this.hearsList).find(rgx => new RegExp(rgx).test(ctx.message));
-        if (hears) {
-            this.provideToHandlers(this.hearsList[hears], ctx);
-        } else {
-            this.onHandler(ctx);
-        }
-    }
-
-    private commandList: actionList = {};
-    private onList: actionList = {};
     private providers: Provider[] = [];
-    private hearsList: actionList = {};
+    private middlewares: MiddlewareInterface[] = [];
 }
 
