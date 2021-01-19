@@ -2,7 +2,8 @@ import {ProvidersList} from "./providers/Provider";
 import {ProviderBuilder} from "./providers/ProviderBuilder";
 import {Context, MessageContentType} from './types';
 import {Bot} from "./bot";
-import {MiddlewareHandle, MiddlewareNextFn} from './bot/types';
+import {MiddlewareNextFn} from './bot/types';
+import {ProviderVK} from './providers/ProviderVK';
 
 async function start() {
 
@@ -29,6 +30,11 @@ async function start() {
         next();
     });
 
+    providerTelegram.sendMessage({
+        peer_id: 1243,
+        message: 'А я тебя знаю!'
+    })
+
     bot.on((ctx: Context & any) => {
         if (ctx.message == 'Привет') {
             ctx.reply(`Привет, ${ctx.name} ${ctx.sname}!`);
@@ -49,6 +55,7 @@ async function start() {
     });
 
     bot.addProvider(providerVK, providerTelegram, providerQuestBot);
+
     bot.start();
 
 }

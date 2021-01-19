@@ -1,7 +1,6 @@
 export type VKMessage = [number, number, number, number, number, string, string, { attach1_type: MessageContentType }?]
 export type SendMessage = {
     peer_id: number,
-    random_id: number,
     message: string
 }
 export type TelegramMessage = {

@@ -43,7 +43,6 @@ export class ProviderTelegram extends Provider {
             reply: (message: string) => {
                 this.sendMessage({
                     peer_id: newMessage.from.id,
-                    random_id: -1,
                     message,
                 });
             },

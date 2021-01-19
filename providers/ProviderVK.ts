@@ -13,14 +13,14 @@ export class ProviderVK extends Provider {
     private url: string = 'https://api.vk.com/method/';
     private messagesTypes: Array<MessageEventType> = [MessageEventType.NEW_MESSAGE, MessageEventType.EDITED_MESSAGE];
 
-    async initLongPoolingServer() {
+    private async initLongPoolingServer() {
         const data = await axios.get(`${this.url}messages.getLongPollServer?group_id=${this.groupId}&lp_version=3&access_token=${this.token}&v=5.103`).then(res => res.data.response);
         this.server = data.server;
         this.key = data.key;
         this.ts = data.ts;
     }
 
-    async initGroupId() {
+    private async initGroupId() {
         try {
             const res = await axios.get(`${this.url}groups.getById?&access_token=${this.token}&v=5.103`);
             if (res.data.response) {
@@ -40,7 +40,7 @@ export class ProviderVK extends Provider {
         this.doRequest();
     }
 
-    async doRequest(wait: number = 25) {
+    private async doRequest(wait: number = 25) {
         try {
             const {
                 ts,
@@ -63,12 +63,14 @@ export class ProviderVK extends Provider {
         this.startPooling()
     }
 
-    async sendMessage(message: SendMessage) {
-        const res = await axios.get(`${this.url}messages.send`, {
+    async sendMessage(message: SendMessage, random_id: number = Date.now()) {
+        console.log(message)
+        await axios.get(`${this.url}messages.send`, {
             params: {
                 access_token: this.token,
                 v: 5.103,
-                ...message
+                ...message,
+                random_id
             }
         })
     }
@@ -81,7 +83,7 @@ export class ProviderVK extends Provider {
             message = 6,
             attachment = 7
         }
-        
+
         return {
             type: original[VKMessageFields.attachment]?.attach1_type || MessageContentType.TEXT,
             id: original[VKMessageFields.id],
@@ -90,10 +92,11 @@ export class ProviderVK extends Provider {
             message: original[VKMessageFields.message],
             reply: (message: string) => {
                 this.sendMessage({
-                    random_id: original[VKMessageFields.id] + 1,
-                    peer_id: original[VKMessageFields.from],
-                    message: message,
-                });
+                        peer_id: original[VKMessageFields.from],
+                        message: message,
+                    },
+                    original[VKMessageFields.id] + 1,
+                );
             },
             original
         }
